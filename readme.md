@@ -22,41 +22,41 @@ At the “file and path” section you should add version ID and file path that 
 In order not to type the AppDirector file name at each execution you can add it manually. (change the file name at ‘filetosearch’ object).
 
 ## Currently Supported ##
--	Vlan
--	Layer3 interfaces
--	Reals 
+- Vlan
+- Layer3 interfaces
+- Reals 
   * Real IP
-  *	Ena/dis
-  *	Backup server
--	Groups
-  *	Metric
-  *	Backup group creation
-  *	Real server attachment
-  *	Backup group attachment
--	Virts
-  *	VIP
-  *	Service and service type
-  *	Group attachment
+  * Ena/dis
+  * Backup server
+- Groups
+  * Metric
+  * Backup group creation
+  * Real server attachment
+  * Backup group attachment
+- Virts
+  * VIP
+  * Service and service type
+  * Group attachment
 
 ## Planed in The Future ##
-*	Persistence
-  *	Client IP
-  *	cookie
-*	Trunks / LACP
-*	Static Routes
-*	syslog
-*	NTP
-*	SNMP
-*	Filters
-*	HA
-  *	VRRP migration into new HA
-  *	Floating IP
-*	Health Checks
-  *	Servers HC
-  *	Groups HC
-*	NAT
-  *	Client NAT IP
-  *	Client NAT range
-  *	Client range to be NAT
-*	XFF
-*	SIP LB
+* Persistence
+  * Client IP
+  * cookie
+* Trunks / LACP
+* Static Routes
+* syslog
+* NTP
+* SNMP
+* Filters
+* HA
+  * VRRP migration into new HA
+  * Floating IP
+* Health Checks
+  * Servers HC
+  * Groups HC
+* NAT
+  * Client NAT IP
+  * Client NAT range
+  * Client range to be NAT
+* XFF
+* SIP LB
