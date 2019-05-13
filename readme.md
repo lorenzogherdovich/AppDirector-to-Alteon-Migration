@@ -60,3 +60,4 @@ In order not to type the AppDirector file name at each execution you can add it 
   * Client range to be NAT
 * XFF
 * SIP LB
+* Segmentation
