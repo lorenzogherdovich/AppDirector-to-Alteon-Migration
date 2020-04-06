@@ -30,8 +30,8 @@ dictL3 = {}
 #####################################################
 
 script_ver = 'V1'
-AppDirector_file_path = 'C:/Users/moshec/PycharmProjects/tests/' + script_ver + '/AppDirector/'
-Alteon_file_path = 'C:/Users/moshec/PycharmProjects/tests/' + script_ver + '/Alteon/'
+AppDirector_file_path = os.path.join(os.getcwd(), "test"+script_ver, 'AppDirector')
+Alteon_file_path = os.path.join(os.getcwd(), "test"+script_ver, 'Alteon')
 # filetosearch = 'AD_LAN_Main_25-01-17.txt'
 filetosearch = raw_input('please enter file name :')
 
