@@ -5,7 +5,7 @@
 # Manual use was tested on both Linux and windows client(using Pycharm)                                       #
 # Currently we only support AppDirector version 2.14 .                                                        #
 # Supported Alteon versions are 32.0.0.0 and above (not tested on older versions)                             #
-# The script works with both appdirector config file that not contains “/” at the end of the line.            #
+# The script works with both appdirector config file that not contains '/' at the end of the line.            #
 #                          MosheCohen-Radware                                                              #
 ###############################################################################################################
 
