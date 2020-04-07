@@ -29,9 +29,8 @@ dictL3 = {}
 ###                  files and path               ###
 #####################################################
 
-script_ver = 'V1'
-AppDirector_file_path = os.path.join(os.getcwd(), "output"+script_ver, 'AppDirector')
-Alteon_file_path = os.path.join(os.getcwd(), "output"+script_ver, 'Alteon')
+AppDirector_file_path = os.path.join(os.getcwd(), "output", 'AppDirector')
+Alteon_file_path = os.path.join(os.getcwd(), "output", 'Alteon')
 # filetosearch = 'AD_LAN_Main_25-01-17.txt'
 filetosearch = raw_input('please enter file name :')
 
