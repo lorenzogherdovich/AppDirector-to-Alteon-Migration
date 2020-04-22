@@ -108,7 +108,7 @@ except Exception as e:
     print "Tried to load filename \"{}\" and got the error: {}".format(appdConfigFile, e)
     sys.exit(1)
  
-leftovers.write(filedata.replace('\\\r\n', ''))
+leftovers.write(filedata.replace('\\\r\n', '').replace('\\\n', ''))
 leftovers.close()
 os.makedirs(AppDirector_file_path)
 os.makedirs(Alteon_file_path)
