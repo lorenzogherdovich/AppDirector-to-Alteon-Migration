@@ -12,6 +12,8 @@
 
 import sys
 import os
+import datetime
+
 dictMethod = {'Cyclic': 'roundrobin', 'Weighted_Cyclic': 'roundrobin', 'Fewest_Number_of_Users': 'leastconns', 'Least_Amount_of_Traffic': 'leastconns', 'Hashing': 'phash'}
 dictFilePars = {'Servers': 'appdirector farm server table', 'Farms': 'appdirector farm table', 'L4-Policy': 'appdirector l4-policy table'}
 servicetranslation = {'80': 'http', '443': 'https', '53': 'dns', '554': 'rtsp', '5060': 'sip'}
@@ -28,11 +30,17 @@ dictL3 = {}
 #####################################################
 ###                  files and path               ###
 #####################################################
+argument_len = len(sys.argv)
+if argument_len == 1:
+    appdConfigFile = raw_input('please enter file name :')
+    projectName = "AppDirector_Project_"+datetime.datetime.today().strftime("%Y%M%d_%H%M")
+elif argument_len == 2:
+    appdConfigFile = sys.argv[1]
+    projectName = "AppDirector_Project_"+datetime.datetime.today().strftime("%Y%M%d_%H%M")
+elif argument_len == 3:
+    appdConfigFile = sys.argv[1]
+    projectName = sys.argv[2]
 
-AppDirector_file_path = os.path.join(os.getcwd(), "output", 'AppDirector')
-Alteon_file_path = os.path.join(os.getcwd(), "output", 'Alteon')
-# filetosearch = 'AD_LAN_Main_25-01-17.txt'
-filetosearch = raw_input('please enter file name :')
 
 #####################################################
 ###                  functions                    ###
@@ -50,8 +58,8 @@ def search(filetosearch, searchquery, newfilename):
                         f3+=line
         with open(filetosearch, 'w') as f1:
             f1.write(f3)
-    except:
-      print searchquery, "not in file"
+    except Exception as e:
+      print searchquery, "not in file", e
 
 
 def spaceremove( xx, y, line1 ):
@@ -87,22 +95,33 @@ def spacereplace( x, y, line2 ):
 ###                File Parssing                  ###
 #####################################################
 
-filedata = open(filetosearch, 'r').read()
-leftovers = open('leftovers.txt', 'w+')
-leftovers.write(filedata)
+try:
+    filedata = open(appdConfigFile, 'r').read()
+    
+    leftovers_file_name = os.path.join(os.getcwd(), projectName,'leftovers.txt')
+    AppDirector_file_path = os.path.join(os.getcwd(),projectName, 'AppDirector', "")
+    Alteon_file_path = os.path.join(os.getcwd(), projectName, 'Alteon',"")
+    os.makedirs(os.path.join(os.getcwd(), projectName))
+    leftovers = open(leftovers_file_name, 'w+')
+
+except Exception as e:
+    print "Tried to load filename \"{}\" and got the error: {}".format(appdConfigFile, e)
+    sys.exit(1)
+ 
+leftovers.write(filedata.replace('\\\r\n', ''))
 leftovers.close()
 os.makedirs(AppDirector_file_path)
 os.makedirs(Alteon_file_path)
 
 for F in dictFilePars:
     searchquery = dictFilePars[F]
-    newfilename = AppDirector_file_path + F + '.txt'
-    search('leftovers.txt', searchquery, newfilename)
+    newfilename = os.path.join(AppDirector_file_path, F+".txt" )
+    search(leftovers_file_name, searchquery, newfilename)
 
-grp = open(AppDirector_file_path + 'Farms.txt','r')
-pol = open(AppDirector_file_path + 'L4-Policy.txt', 'r')
-srv = open(AppDirector_file_path + 'Servers.txt','r')
-L3 = open(AppDirector_file_path + 'L3-Policy.txt','r')
+grp = open(os.path.join(AppDirector_file_path,'Farms.txt'),'r')
+pol = open(os.path.join(AppDirector_file_path, 'L4-Policy.txt' ), 'r')
+srv = open(os.path.join(AppDirector_file_path, 'Servers.txt' ),'r')
+L3 = open(os.path.join(AppDirector_file_path, 'L3-Policy.txt' ),'r')
 
 #####################################################
 ###            L3 dict creation              ###
@@ -273,32 +292,42 @@ for line in pol:                                          #Space remove
 #####################################################
 
 orig_stdout = sys.stdout
-sys.stdout = open(Alteon_file_path + "Alteon_L3_Policy.txt", 'w+')
+sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_L3_Policy.txt"), 'w+')
 
 print ''
 print '*******************    L3 Interface    *******************'
 print ''
 
 interfaceid = 1
-# print dictL3
 for s in dictL3:
     if 'v' in dictL3[s]:
         print '/c/l2/vlan', dictL3[s]['v']
         print '        ena'
         print '        add <physical port number>'
         orig_stdout = sys.stdout
-        sys.stdout = open(Alteon_file_path + "Alteon_Errors.txt", 'a')
+        sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Errors.txt"), 'a')
         print('Error - physical port number should be configured for vlan id: --->', dictL3[s]['v'])
         sys.stdout.close()
         sys.stdout = orig_stdout
-    print '/c/l3/if', interfaceid
-    print '        ena'
-    print '        addr', dictL3[s]['L3_ip']
-    print '        mask', dictL3[s]['L3_mask']
-    print '        vlan', dictL3[s]['v']
-    if 'pa' in dictL3[s]:
-        print '        peer', dictL3[s]['pa']
-    interfaceid = interfaceid+1
+    if "MNG" in s:
+        if dictL3[s]['L3_port'] == "MNG-1":
+            print '/c/sys/mmgmt/net 1', interfaceid
+        elif dictL3[s]['L3_port'] == "MNG-2":
+            print '/c/sys/mmgmt/net 2', interfaceid
+        else:
+            print '/c/sys/mmgmt', interfaceid
+        print '        ena'
+        print '        addr', dictL3[s]['L3_ip']
+        print '        mask', dictL3[s]['L3_mask']
+    else:
+        print '/c/l3/if', interfaceid
+        print '        ena'
+        print '        addr', dictL3[s]['L3_ip']
+        print '        mask', dictL3[s]['L3_mask']
+        print '        vlan', dictL3[s]['v']
+        if 'pa' in dictL3[s]:
+            print '        peer', dictL3[s]['pa']
+        interfaceid = interfaceid+1
 
 sys.stdout.close()
 sys.stdout=orig_stdout
@@ -308,7 +337,7 @@ sys.stdout=orig_stdout
 #####################################################
 
 orig_stdout = sys.stdout
-sys.stdout = open(Alteon_file_path + "Alteon_Servers.txt", 'w+')
+sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Servers.txt"), 'w+')
 
 print ''
 print '*******************    Servers    *******************'
@@ -343,7 +372,7 @@ sys.stdout=orig_stdout
 #####################################################
 
 orig_stdout = sys.stdout
-sys.stdout = open(Alteon_file_path + "Alteon_Groups.txt", 'w+')
+sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Groups.txt"), 'w+')
 
 dictBCKServers = {}
 print ''
@@ -354,7 +383,7 @@ print ''
 #print dictFarms
 for p in dictFarms:                                                     ###### groups creation ######
     print '/c/slb/group', p
-    if dictFarms[p]['dm'] != '':
+    if 'dm' in dictFarms[p] and dictFarms[p]['dm'] != '':
         for m in dictMethod:
             if dictFarms[p]['dm'] == m:
                 print '        metric', dictMethod[m]
@@ -404,7 +433,7 @@ sys.stdout=orig_stdout
 
 
 orig_stdout = sys.stdout
-sys.stdout = open(Alteon_file_path + "Alteon_Virts.txt", 'w+')
+sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Virts.txt"), 'w+')
 
 print ''
 print '*******************    VIRTs    *******************'
@@ -414,14 +443,14 @@ print ''
 for l in dictL4Pols:
     if 'ta' in dictL4Pols[l] and dictL4Pols[l]['ta'].rstrip("\n") == 'Virtual_IP_Interface':
         orig_stdout = sys.stdout
-        sys.stdout = open(Alteon_file_path + "Alteon_Errors.txt", 'a')
+        sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Errors.txt"), 'a')
         print('Error - vip should be configured as floating IP: --->', dictL4Pols[l]['vipname'], '--->', dictL4Pols[l])
         sys.stdout.close()
         sys.stdout=orig_stdout
         continue
     if 'po' in dictL4Pols[l]:
         orig_stdout = sys.stdout
-        sys.stdout = open(Alteon_file_path + "Alteon_Errors.txt", 'a')
+        sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Errors.txt"), 'a')
         print('Error - L7 policy should be configured for : --->', dictL4Pols[l]['vipname'], '--->', dictL4Pols[l])
         sys.stdout.close()
         sys.stdout=orig_stdout
@@ -458,7 +487,8 @@ sys.stdout=orig_stdout
 #####################################################
 
 filenames = [Alteon_file_path + 'Alteon_Errors.txt', Alteon_file_path + 'Alteon_L3_Policy.txt', Alteon_file_path + 'Alteon_Servers.txt', Alteon_file_path + 'Alteon_Groups.txt', Alteon_file_path +'Alteon_Virts.txt']
-with open(Alteon_file_path + 'Alteon_CFG.txt', 'w') as outfile:
+with open(os.path.join(Alteon_file_path, 'Alteon_CFG.txt'), 'w') as outfile:
     for fname in filenames:
-        with open(fname) as infile:
-            outfile.write(infile.read())
+        infile = open(os.path.join(Alteon_file_path, fname))
+        outfile.write(infile.read())
+        infile.close()
