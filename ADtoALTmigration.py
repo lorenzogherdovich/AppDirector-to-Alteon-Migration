@@ -9,6 +9,12 @@
 #                          MosheCohen-Radware                                                              #
 ###############################################################################################################
 
+###
+### fork. little modification to create configuration compatible with AlteonOS 30...
+###
+
+
+
 
 import sys
 import os
@@ -209,7 +215,7 @@ for line in srv:
     dictServer.clear()
     #as = ''
     #w = ''
-#print dictServers
+# print dictServers
 
 
 #####################################################
@@ -343,13 +349,17 @@ print ''
 print '*******************    Servers    *******************'
 print ''
 
+
 for s in dictServers:
-    print '/c/slb/real ', dictServers[s]['sn']
+    # print '/c/slb/real ', dictServers[s]['sn']
+    print '/c/slb/real ', dictServers[s]['id'].strip()
     if 'as' in dictServers[s] and dictServers[s]['as'] == 'Disable':
         print '        dis'
     else:
         print '        ena'
+    print '        ipver v4'
     print '        rip', dictServers[s]['srvip']
+    print '        name ', '"'+dictServers[s]['sn']+'"' 
     # add real server port in case exists:
     if 'srvport' in dictServers[s] and dictServers[s]['srvport'] != 'None':
         print '        addport', dictServers[s]['srvport']
@@ -361,6 +371,8 @@ for s in dictServers:
         for backup in dictServers:
             if dictServers[s]['srvfarm'].rstrip("\n") == dictServers[backup]['srvfarm'].rstrip("\n") and dictServers[s]['ba'].rstrip("\n") == dictServers[backup]['srvip'].rstrip("\n"):
                 print '        backup', dictServers[backup]['sn']
+    print '/c/slb/real ', str(dictServers[s]['id'].strip()) + '/adv'
+    print '        submac ena'
 
 
 sys.stdout.close()
@@ -380,9 +392,14 @@ print '*******************    Groups    *******************'
 print ''
 
 
-#print dictFarms
+# print dictFarms
+incrementagrp = 0
 for p in dictFarms:                                                     ###### groups creation ######
-    print '/c/slb/group', p
+    incrementagrp = incrementagrp + 1
+    dictFarms[p]['id'] = incrementagrp
+    # print '/c/slb/group', p
+    print '/c/slb/group', incrementagrp
+    print '        ipver v4'
     if 'dm' in dictFarms[p] and dictFarms[p]['dm'] != '':
         for m in dictMethod:
             if dictFarms[p]['dm'] == m:
@@ -390,7 +407,8 @@ for p in dictFarms:                                                     ###### g
     # add real to group
         for real in dictServers:
             if 'om' not in dictServers[real] and dictFarms[p]['farm'] == dictServers[real]['srvfarm']:
-                print '        add', dictServers[real]['sn']
+                #print '        add', dictServers[real]['sn']
+                print '        add', dictServers[real]['id'].strip()
     # create backup group and add backup real server
     for real in dictServers:
         if dictFarms[p]['farm'] == dictServers[real]['srvfarm'] and 'om' in dictServers[real]:
@@ -405,6 +423,7 @@ for p in dictFarms:                                                     ###### g
         for bck in dictBCKServers:
             print '        add', dictServers[bck]['sn']
         dictBCKServers.clear()
+    print '        name', '"' + p + '"'
 
 sys.stdout.close()
 sys.stdout=orig_stdout
@@ -440,7 +459,9 @@ print '*******************    VIRTs    *******************'
 print ''
 
 # print dictL4Pols
+incrementav = 0
 for l in dictL4Pols:
+    incrementav = incrementav + 1
     if 'ta' in dictL4Pols[l] and dictL4Pols[l]['ta'].rstrip("\n") == 'Virtual_IP_Interface':
         orig_stdout = sys.stdout
         sys.stdout = open(os.path.join(Alteon_file_path, "Alteon_Errors.txt"), 'a')
@@ -456,19 +477,26 @@ for l in dictL4Pols:
         sys.stdout=orig_stdout
         continue
     # Virt Creation
-    print '/c/slb/virt', l
+    # print '/c/slb/virt', l
+    print '/c/slb/virt', incrementav
     print '        ena'
+    print '        ipver v4'
     # Vip IP
     print '        vip', dictL4Pols[l]['vipip']
+    print '        vname ' + '"' + l + '"'
     # Service
     if dictL4Pols[l]['port'] in servicetranslation:
-        print '/c/slb/virt', l,'/service', dictL4Pols[l]['port'], servicetranslation[dictL4Pols[l]['port']]
+        # print '/c/slb/virt', l,'/service', dictL4Pols[l]['port'], servicetranslation[dictL4Pols[l]['port']]
+        print '/c/slb/virt', str(incrementav) + '/service', dictL4Pols[l]['port'], servicetranslation[dictL4Pols[l]['port']]
     elif 'ta' in dictL4Pols[l] and dictL4Pols[l]['ta'].rstrip("\n") != 'Virtual_IP_Interface':
-        print '/c/slb/virt', l, '/service', dictL4Pols[l]['port'], dictL4Pols[l]['ta'].lower()
+        # print '/c/slb/virt', l, '/service', dictL4Pols[l]['port'], dictL4Pols[l]['ta'].lower()
+        print '/c/slb/virt', str(incrementav) + '/service', dictL4Pols[l]['port'], dictL4Pols[l]['ta'].lower()
     elif dictL4Pols[l]['port'] == 'Any':
-        print '/c/slb/virt', l,'/service 1 basic-slb'
+        # print '/c/slb/virt', l,'/service 1 basic-slb'
+        print '/c/slb/virt', str(incrementav) + '/service 1 basic-slb'
     else:
-        print '/c/slb/virt', l,'/service', dictL4Pols[l]['port'], 'basic-slb'
+        # print '/c/slb/virt', l,'/service', dictL4Pols[l]['port'], 'basic-slb'
+        print '/c/slb/virt', str(incrementav) + '/service', dictL4Pols[l]['port'], 'basic-slb'
     # Group
     print '        group', dictL4Pols[l]['fn'].rstrip("\n")
     print ' '
@@ -476,6 +504,7 @@ for l in dictL4Pols:
     tmout = dictL4Pols[l]['fn'].rstrip("\n")
     if 'at' in dictFarms[tmout] and int(dictFarms[tmout]['at'])/60 >= 10:
         print '        tmout', int(dictFarms[tmout]['at'])/60
+    print '        nonat ena'
 
 
 sys.stdout.close()
